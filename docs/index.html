@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBRD Debt Visualization</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+        .visualizations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .card {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .card:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+        }
+        .card h3 {
+            color: #667eea;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .card p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 IBRD Debt Visualization</h1>
+        <p class="subtitle">Interactive visualizations of World Bank debt trajectories (1946-2025)</p>
+
+        <div class="visualizations">
+            <a href="IBRD_Interactive_Timeline_1946-2025.html" class="card">
+                <h3>📅 Interactive Timeline</h3>
+                <p>Explore debt trajectories across decades with an interactive timeline</p>
+            </a>
+
+            <a href="IBRD_TimeSeries_Chart.html" class="card">
+                <h3>📊 Time Series Chart</h3>
+                <p>Track debt changes over time with detailed line charts</p>
+            </a>
+
+            <a href="IBRD_Slope_Interactive.html" class="card">
+                <h3>📈 Slope Interactive</h3>
+                <p>Compare debt trends and changes between different countries</p>
+            </a>
+
+            <a href="IBRD_VelocityMap.html" class="card">
+                <h3>🗺️ Velocity Map</h3>
+                <p>Visualize the rate of change in debt across regions</p>
+            </a>
+
+            <a href="IBRD_VelocityMap_v3.html" class="card">
+                <h3>🗺️ Velocity Map v3</h3>
+                <p>Advanced velocity visualization with enhanced features</p>
+            </a>
+
+            <a href="ibrd_shifts_20_years.html" class="card">
+                <h3>🔄 20-Year Shifts</h3>
+                <p>Analyze how debt patterns have shifted over 20-year periods</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
