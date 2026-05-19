@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Shifting Map of World Bank Debt — 2005 to 2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@300;400;600&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0b0a08;
+    --paper: #f5f1e8;
+    --paper-deep: #ebe5d4;
+    --accent: #c8451c;
+    --accent-soft: #e07a4f;
+    --gold: #b08c3a;
+    --rule: #1a1814;
+    --muted: #6b6457;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter Tight', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(200, 69, 28, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(176, 140, 58, 0.05) 0%, transparent 50%);
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+    opacity: 0.18;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    z-index: 1;
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 48px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding: 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  header .masthead {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    text-transform: none;
+  }
+
+  header .masthead em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 80px 0 60px;
+    border-bottom: 2px solid var(--rule);
+    position: relative;
+  }
+
+  .hero .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+  }
+
+  .hero .eyebrow::before {
+    content: '— ';
+  }
+
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(48px, 8vw, 112px);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    margin-bottom: 32px;
+    max-width: 1000px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .hero h1 .crossed {
+    position: relative;
+    display: inline-block;
+  }
+
+  .hero .standfirst {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 22px;
+    line-height: 1.45;
+    max-width: 720px;
+    color: var(--ink);
+    margin-bottom: 48px;
+  }
+
+  .hero .meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .hero .meta div span {
+    display: block;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .hero .meta div strong {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 13px;
+  }
+
+  /* SECTION */
+  section.story {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  .section-label::before {
+    content: '§ ';
+  }
+
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(36px, 4.5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin-bottom: 40px;
+    max-width: 900px;
+  }
+
+  h2 em { font-style: italic; color: var(--accent); }
+
+  /* THE THREE COLUMNS — RANKING SNAPSHOTS */
+  .snapshots {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    margin-top: 60px;
+    border-top: 2px solid var(--rule);
+    border-bottom: 2px solid var(--rule);
+  }
+
+  .snapshot {
+    padding: 40px 32px;
+    border-right: 1px solid var(--rule);
+    position: relative;
+  }
+  .snapshot:last-child { border-right: none; }
+
+  .snapshot .year {
+    font-family: 'Fraunces', serif;
+    font-weight: 900;
+    font-size: 88px;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    margin-bottom: 4px;
+  }
+
+  .snapshot.current .year { color: var(--accent); }
+
+  .snapshot .period {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .snapshot ol {
+    list-style: none;
+    counter-reset: ranking;
+  }
+
+  .snapshot ol li {
+    counter-increment: ranking;
+    display: flex;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px dotted rgba(11,10,8,0.18);
+    font-size: 15px;
+    transition: background 0.2s ease;
+  }
+
+  .snapshot ol li:hover {
+    background: rgba(200,69,28,0.04);
+  }
+
+  .snapshot ol li::before {
+    content: counter(ranking, decimal-leading-zero);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 36px;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
+  .snapshot ol li .country {
+    flex: 1;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .snapshot ol li .share {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .snapshot ol li.highlight .country {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .snapshot ol li.fell {
+    opacity: 0.55;
+  }
+
+  /* THE NARRATIVE WINNERS / LOSERS */
+  .verdicts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 48px;
+    margin-top: 60px;
+  }
+
+  .verdict {
+    padding: 40px;
+    border: 1px solid var(--rule);
+    background: var(--paper-deep);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .verdict::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 80px;
+    height: 80px;
+    background: var(--accent);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .verdict.down::before { background: var(--ink); }
+
+  .verdict .v-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .verdict.down .v-label { color: var(--ink); }
+
+  .verdict h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+
+  .verdict h3 em { font-style: italic; }
+
+  .verdict p {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  /* MOVERS TABLE */
+  .movers {
+    margin-top: 80px;
+  }
+
+  .movers-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 2fr;
+    border-top: 2px solid var(--rule);
+    border-bottom: 2px solid var(--rule);
+  }
+
+  .movers-grid > div {
+    padding: 20px 16px;
+    font-size: 14px;
+    border-bottom: 1px dotted rgba(11,10,8,0.18);
+    display: flex;
+    align-items: center;
+  }
+
+  .movers-grid > div:nth-child(-n+5) {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .movers-grid > div:nth-child(5n+1) {
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+
+  .arrow-up { color: var(--accent); font-weight: 600; }
+  .arrow-down { color: var(--muted); }
+  .arrow-new { color: var(--gold); font-weight: 600; }
+
+  /* CHART — BAR */
+  .chart-section { padding: 80px 0; border-bottom: 1px solid var(--rule); }
+
+  .bar-chart {
+    margin-top: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 100px;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .bar-row .label {
+    font-weight: 500;
+    font-size: 15px;
+    text-align: right;
+  }
+
+  .bar-row .label.highlight { color: var(--accent); font-weight: 600; }
+
+  .bar-track {
+    height: 28px;
+    background: rgba(11,10,8,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ink) 0%, var(--ink) 100%);
+    transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .bar-fill.accent {
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-soft) 100%);
+  }
+
+  .bar-row .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 60px 0 40px;
+    border-top: 2px solid var(--rule);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  footer .foot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+  }
+
+  footer .foot-grid div span {
+    display: block;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  footer .sign-off {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--muted);
+    padding-top: 24px;
+    border-top: 1px solid rgba(11,10,8,0.15);
+  }
+
+  /* ANIMATIONS */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero h1, .hero .standfirst, .snapshot, .verdict, .bar-row {
+    animation: rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .hero .standfirst { animation-delay: 0.15s; }
+  .snapshot:nth-child(1) { animation-delay: 0.1s; }
+  .snapshot:nth-child(2) { animation-delay: 0.25s; }
+  .snapshot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .container { padding: 0 24px; }
+    .snapshots { grid-template-columns: 1fr; }
+    .snapshot { border-right: none; border-bottom: 1px solid var(--rule); }
+    .verdicts { grid-template-columns: 1fr; gap: 24px; }
+    .movers-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .movers-grid > div:nth-child(5n+4),
+    .movers-grid > div:nth-child(5n+5) { display: none; }
+    .bar-row { grid-template-columns: 100px 1fr 70px; gap: 12px; }
+    .hero .meta { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="masthead">Ledger <em>&amp;</em> Atlas</div>
+    <div>Issue Nº 047 · Vol. XX · World Bank Edition</div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="eyebrow">A Twenty-Year Reading of IBRD Outstanding Loans</div>
+    <h1>The shifting <em>map</em> of who borrows from the <em>World&nbsp;Bank</em>.</h1>
+    <p class="standfirst">
+      In 2005 the league table read like a Latin-American almanac — Brazil, Mexico, Argentina at the top, with China and Turkey climbing fast. Two decades later the geography has tilted east, and Asia now anchors the order. This is a record of who rose, who fell, and which countries quietly walked away from the world's oldest development bank.
+    </p>
+    <div class="meta">
+      <div><span>Coverage</span><strong>FY 2005 → 2025</strong></div>
+      <div><span>Lender</span><strong>IBRD (World Bank)</strong></div>
+      <div><span>Metric</span><strong>Outstanding Loans</strong></div>
+      <div><span>Currency</span><strong>USD, current</strong></div>
+    </div>
+  </section>
+
+  <!-- THE THREE COLUMNS — RANKINGS -->
+  <section class="story">
+    <div class="section-label">Three Snapshots</div>
+    <h2>The league table, captured every <em>ten years</em>.</h2>
+
+    <div class="snapshots">
+      <!-- 2005 -->
+      <div class="snapshot">
+        <div class="year">'05</div>
+        <div class="period">FY 2001 – 2005 Cumulative</div>
+        <ol>
+          <li><span class="country">Turkey</span><span class="share">14%</span></li>
+          <li><span class="country">Brazil</span><span class="share">13%</span></li>
+          <li class="highlight"><span class="country">India</span><span class="share">10%</span></li>
+          <li><span class="country">Mexico</span><span class="share">9%</span></li>
+          <li><span class="country">China</span><span class="share">8%</span></li>
+          <li><span class="country">Argentina</span><span class="share">8%</span></li>
+          <li><span class="country">Colombia</span><span class="share">5%</span></li>
+          <li><span class="country">Indonesia</span><span class="share">3%</span></li>
+          <li><span class="country">Romania</span><span class="share">3%</span></li>
+          <li><span class="country">Russia</span><span class="share">3%</span></li>
+        </ol>
+      </div>
+
+      <!-- 2015 -->
+      <div class="snapshot">
+        <div class="year">'15</div>
+        <div class="period">Cumulative Portfolio Snapshot</div>
+        <ol>
+          <li class="highlight"><span class="country">India</span><span class="share">$52.7 B</span></li>
+          <li><span class="country">Brazil</span><span class="share">~ $19 B</span></li>
+          <li><span class="country">China</span><span class="share">~ $17 B</span></li>
+          <li><span class="country">Mexico</span><span class="share">~ $16 B</span></li>
+          <li><span class="country">Indonesia</span><span class="share">~ $15 B</span></li>
+          <li><span class="country">Turkey</span><span class="share">~ $14 B</span></li>
+          <li><span class="country">Colombia</span><span class="share">~ $10 B</span></li>
+          <li><span class="country">Egypt</span><span class="share">~ $5 B</span></li>
+          <li class="fell"><span class="country">Argentina</span><span class="share">declining</span></li>
+          <li class="fell"><span class="country">Poland</span><span class="share">graduating</span></li>
+        </ol>
+      </div>
+
+      <!-- 2025 -->
+      <div class="snapshot current">
+        <div class="year">'25</div>
+        <div class="period">Latest IBRD Snapshot</div>
+        <ol>
+          <li class="highlight"><span class="country">India</span><span class="share">$39.3 B</span></li>
+          <li><span class="country">Indonesia</span><span class="share">$22.8 B</span></li>
+          <li><span class="country">Colombia</span><span class="share">$17.2 B</span></li>
+          <li><span class="country">Ukraine</span><span class="share">$16.8 B</span></li>
+          <li><span class="country">Türkiye</span><span class="share">$16.5 B</span></li>
+          <li><span class="country">Brazil</span><span class="share">$15.2 B</span></li>
+          <li><span class="country">China</span><span class="share">$14.4 B</span></li>
+          <li><span class="country">Mexico</span><span class="share">$13.1 B</span></li>
+          <li><span class="country">Argentina</span><span class="share">$12.5 B</span></li>
+          <li><span class="country">Philippines</span><span class="share">$11.8 B</span></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- VERDICTS -->
+    <div class="verdicts">
+      <div class="verdict">
+        <div class="v-label">The Climb</div>
+        <h3>India moved from <em>third</em> to undisputed <em>first</em>.</h3>
+        <p>In 2005, India sat behind Turkey and Brazil with a 10% share of IBRD flows. By 2015 it was the single largest borrower in the bank's 70-year history. In 2025 its outstanding balance still towers over the rest of the table — nearly double the next country.</p>
+      </div>
+      <div class="verdict down">
+        <div class="v-label">The Departure</div>
+        <h3>China is <em>graduating</em> out of the system.</h3>
+        <p>China was 5th in 2005 with an 8% share. As GNI per capita crossed graduation thresholds, the Bank narrowed China's eligibility. New lending now skews toward green finance and pollution control — and the outstanding balance has fallen for a decade. By 2025, China sits 7th and shrinking.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOVERS -->
+  <section class="story">
+    <div class="section-label">Movements</div>
+    <h2>Twenty years in <em>six rows</em>.</h2>
+
+    <div class="movers movers-grid">
+      <div>Country</div>
+      <div>2005</div>
+      <div>2015</div>
+      <div>2025</div>
+      <div>Story</div>
+
+      <div>India</div>
+      <div>#3</div>
+      <div>#1</div>
+      <div class="arrow-up">#1 ▲</div>
+      <div>Infrastructure megaprojects, rural development, digital economy.</div>
+
+      <div>China</div>
+      <div>#5</div>
+      <div>#3</div>
+      <div class="arrow-down">#7 ▼</div>
+      <div>Graduation in progress; new loans now restricted to climate &amp; green energy.</div>
+
+      <div>Brazil</div>
+      <div>#2</div>
+      <div>#2</div>
+      <div class="arrow-down">#6 ▼</div>
+      <div>Still active, but Amazon &amp; fiscal-reform loans on a slower trajectory.</div>
+
+      <div>Turkey / Türkiye</div>
+      <div>#1</div>
+      <div>#6</div>
+      <div class="arrow-down">#5 ▼</div>
+      <div>Lost the top spot but remains heavily engaged — earthquake recovery, renewables.</div>
+
+      <div>Indonesia</div>
+      <div>#8</div>
+      <div>#5</div>
+      <div class="arrow-up">#2 ▲</div>
+      <div>Energy transition, climate resilience, post-pandemic public health.</div>
+
+      <div>Ukraine</div>
+      <div>—</div>
+      <div>—</div>
+      <div class="arrow-new">#4 ★</div>
+      <div>Wartime emergency support &amp; reconstruction lending since 2022.</div>
+
+      <div>Argentina</div>
+      <div>#6</div>
+      <div>↓</div>
+      <div class="arrow-down">#9 ▼</div>
+      <div>Macro instability suppressed flows for years; recently re-engaging.</div>
+
+      <div>Mexico</div>
+      <div>#4</div>
+      <div>#4</div>
+      <div class="arrow-down">#8 ▼</div>
+      <div>Mid-pack veteran — financial inclusion, climate adaptation.</div>
+
+      <div>Colombia</div>
+      <div>#7</div>
+      <div>#7</div>
+      <div class="arrow-up">#3 ▲</div>
+      <div>Steady climber. Social safety nets, urban sustainability.</div>
+
+      <div>Philippines</div>
+      <div>off</div>
+      <div>off</div>
+      <div class="arrow-new">#10 ★</div>
+      <div>New entrant to the top 10 — digital governance, disaster management.</div>
+    </div>
+  </section>
+
+  <!-- BAR CHART -->
+  <section class="chart-section">
+    <div class="container" style="padding: 0;">
+      <div class="section-label">Today's Order</div>
+      <h2>Outstanding loans, ranked. <em>2025.</em></h2>
+
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="label highlight">India</div>
+          <div class="bar-track"><div class="bar-fill accent" style="width: 100%"></div></div>
+          <div class="value">$39.3 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Indonesia</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 58%"></div></div>
+          <div class="value">$22.8 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Colombia</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 44%"></div></div>
+          <div class="value">$17.2 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Ukraine</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 43%"></div></div>
+          <div class="value">$16.8 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Türkiye</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 42%"></div></div>
+          <div class="value">$16.5 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Brazil</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 39%"></div></div>
+          <div class="value">$15.2 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">China</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 37%"></div></div>
+          <div class="value">$14.4 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Mexico</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 33%"></div></div>
+          <div class="value">$13.1 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Argentina</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 32%"></div></div>
+          <div class="value">$12.5 B</div>
+        </div>
+        <div class="bar-row">
+          <div class="label">Philippines</div>
+          <div class="bar-track"><div class="bar-fill" style="width: 30%"></div></div>
+          <div class="value">$11.8 B</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="foot-grid">
+      <div><span>Primary Source</span>World Bank Finances One · IBRD Statement of Loans, latest snapshot</div>
+      <div><span>Secondary</span>AEI, CGD, World Bank Annual Report, Statista</div>
+      <div><span>Note</span>2005 figures are share of IBRD flows; 2015 / 2025 are outstanding balances</div>
+    </div>
+    <div class="sign-off">
+      A static document. Numbers rounded; rankings reflect the closest snapshot available for each year. The story is real, the precision is editorial.
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>
