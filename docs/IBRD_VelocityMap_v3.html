@@ -1,21 +1,361 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>IBRD Velocity Map v3 - Featured</title><script src="https://d3js.org/d3.v7.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0a0e27;color:#fff;padding:20px}.container{max-width:1400px;margin:0 auto}.header{text-align:center;margin-bottom:30px}.header h1{font-size:32px;color:#667eea;margin-bottom:5px}.header p{font-size:14px;color:#aaa}.featured-badge{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:15px;display:inline-block}.alert{background:#1a2a4a;border-left:4px solid #ff9800;padding:15px;margin-bottom:20px;border-radius:4px;font-size:13px}.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;justify-content:center}.btn{padding:8px 16px;border:1px solid #667eea;background:rgba(102,126,234,0.1);color:#667eea;border-radius:4px;cursor:pointer;font-size:13px}.btn:hover,.btn.active{background:#667eea;color:#fff}.chart-container{background:#1a1a2e;border-radius:8px;padding:20px;margin-bottom:30px;overflow-x:auto}svg{font-size:12px}.legend{background:#1a1a2e;border-radius:8px;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px}.legend-item{font-size:13px;display:flex;align-items:center;gap:8px}.legend-color{width:12px;height:12px;border-radius:2px}.note{background:#2a2a3e;padding:15px;border-radius:4px;font-size:12px;color:#999;margin-top:20px;border-left:3px solid #667eea}</style></head>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Velocity Map v3 - Featured</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0a0e27;
+  color: #fff;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 32px;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+
+.header p {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.featured-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.alert {
+  background: #1a2a4a;
+  border-left: 4px solid #ff9800;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: 1px solid #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover,
+.btn.active {
+  background: #667eea;
+  color: #fff;
+}
+
+.chart-container {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  overflow-x: auto;
+  position: relative;
+}
+
+svg {
+  font-size: 12px;
+}
+
+.legend {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.legend-item {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.legend-item.disabled {
+  opacity: 0.5;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.legend-item:hover .legend-color {
+  box-shadow: 0 0 8px currentColor;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(20, 20, 35, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+  backdrop-filter: blur(10px);
+}
+
+.note {
+  background: #2a2a3e;
+  padding: 15px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #999;
+  margin-top: 20px;
+  border-left: 3px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
 <body>
+
 <div class="container">
-<div class="header"><span class="featured-badge">✨ FEATURED VERSION - v3</span><h1>🗺️ Velocity Map v3 (Advanced)</h1><p>Enhanced slope-weighted debt visualization - IBRD Only (Corrected Data)</p></div>
-<div class="alert"><strong>✅ FEATURED & CORRECTED:</strong> This is the final, most advanced version. Bangladesh=$0 IBRD (IDA only), Pakistan=$2.62B. Slope-weighted encoding shows both magnitude and growth rate.</div>
-<div class="controls"><button class="btn active" onclick="filterRegion('ALL')">All Countries</button><button class="btn" onclick="filterRegion('SAARC')">SAARC</button><button class="btn" onclick="filterRegion('BRICS')">BRICS+</button><button class="btn" onclick="filterRegion('LAT')">Latin America</button></div>
-<div class="chart-container"><svg id="chart" width="100%" height="500"></svg></div>
-<div class="legend" id="legend"></div>
-<div class="note"><strong>v3 Features:</strong> Line thickness=debt magnitude, Opacity=growth rate. Bright thick lines=rising debt, Dim thin lines=stable/declining. <strong>Source:</strong> World Bank IDS | <strong>Currency:</strong> USD Millions</div>
+  <div class="header">
+    <span class="featured-badge">✨ FEATURED VERSION - v3</span>
+    <h1>🗺️ Velocity Map v3 (Advanced)</h1>
+    <p>Enhanced slope-weighted debt visualization with interactive features - IBRD Only</p>
+  </div>
+
+  <div class="alert">
+    <strong>✅ FEATURED & CORRECTED:</strong> Bangladesh=$0 IBRD (IDA only), Pakistan=$2.62B.
+    <strong>Features:</strong> Line thickness = debt magnitude | Opacity = growth rate | Click legend to toggle countries | Hover for details
+  </div>
+
+  <div class="controls">
+    <button class="btn active" onclick="filterRegion('ALL')">All Countries</button>
+    <button class="btn" onclick="filterRegion('SAARC')">SAARC</button>
+    <button class="btn" onclick="filterRegion('BRICS')">BRICS+</button>
+    <button class="btn" onclick="filterRegion('LAT')">Latin America</button>
+  </div>
+
+  <div class="chart-container">
+    <svg id="chart" width="100%" height="500"></svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="note">
+    <strong>📊 How to use:</strong>
+    Line thickness = current IBRD debt amount | Brightness/Opacity = growth rate (steeper growth = brighter) |
+    <strong>Click legend items</strong> to toggle countries on/off |
+    <strong>Hover over lines</strong> to see country details, slope, and growth information
+  </div>
 </div>
+
 <script>
-const IBRD_DATA=[{name:"India",code:"IND",group:"SAARC",color:"#FF6B6B",data:[{y:1946,d:0},{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},{name:"Indonesia",code:"IDN",group:"ASIA",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},{name:"Colombia",code:"COL",group:"LAT",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},{name:"Ukraine",code:"UKR",group:"ALL",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},{name:"Philippines",code:"PHL",group:"ASIA",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},{name:"Brazil",code:"BRA",group:"BRICS",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},{name:"China",code:"CHN",group:"BRICS",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},{name:"Turkey",code:"TUR",group:"ALL",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},{name:"Mexico",code:"MEX",group:"LAT",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},{name:"Argentina",code:"ARG",group:"LAT",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},{name:"Pakistan",code:"PAK",group:"SAARC",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]},{name:"Bangladesh",code:"BGD",group:"SAARC",color:"#999",data:[{y:1971,d:0},{y:2024,d:0}]}];
-let cf="ALL";
-function draw(){const d=IBRD_DATA.filter(c=>cf==="ALL"||c.group===cf),s=d3.select("#chart");s.selectAll("*").remove();const m={top:20,right:20,bottom:40,left:70},w=document.querySelector(".chart-container").offsetWidth-m.left-m.right,h=450-m.top-m.bottom;const g=s.append("g").attr("transform",`translate(${m.left},${m.top})`);const yrs=[...new Set(d.flatMap(c=>c.data.map(dt=>dt.y)))].sort((a,b)=>a-b);const maxD=Math.max(...d.flatMap(c=>c.data.map(dt=>dt.d)));const x=d3.scaleLinear().domain([yrs[0],yrs[yrs.length-1]]).range([0,w]);const y=d3.scaleLinear().domain([0,maxD]).range([h,0]);g.append("g").call(d3.axisLeft(y).tickSize(-w)).selectAll("line").attr("stroke","#333").attr("opacity","0.2");const line=d3.line().x(dt=>x(dt.y)).y(dt=>y(dt.d));d.forEach(c=>{if(c.data.length<2)return;const slope=((c.data[c.data.length-1].d-c.data[0].d)/(c.data[c.data.length-1].y-c.data[0].y))||0;const sw=Math.max(2.5,Math.min(5.5,3+slope/40));const op=Math.max(0.35,Math.min(1,0.55+Math.abs(slope)/800));g.append("path").datum(c.data).attr("d",line).attr("stroke",c.color).attr("fill","none").attr("stroke-width",sw).attr("opacity",op).attr("stroke-linecap","round").attr("stroke-linejoin","round")});g.append("g").attr("transform",`translate(0,${h})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));g.append("g").call(d3.axisLeft(y));const l=d3.select("#legend");l.selectAll(".legend-item").remove();d.forEach(c=>{const i=l.append("div").attr("class","legend-item");const last=c.data[c.data.length-1].d;i.append("span").attr("class","legend-color").style("background",c.color);i.append("span").text(`${c.name} ($${last}M)`)})}
-function filterRegion(r){cf=r;document.querySelectorAll(".btn").forEach(b=>b.classList.remove("active"));event.target.classList.add("active");draw()}
-draw();window.addEventListener("resize",draw);
+const IBRD_DATA = [
+  {name:"India",code:"IND",group:"SAARC",color:"#FF6B6B",data:[{y:1946,d:0},{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",group:"ASIA",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",group:"LAT",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",group:"ALL",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",group:"ASIA",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",group:"BRICS",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",group:"BRICS",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",group:"ALL",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",group:"LAT",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",group:"LAT",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",group:"SAARC",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]},
+  {name:"Bangladesh",code:"BGD",group:"SAARC",color:"#999",data:[{y:1971,d:0},{y:2024,d:0}]}
+];
+
+let currentRegion = "ALL";
+let visibleCountries = new Set(IBRD_DATA.map(c => c.code));
+const tooltip = d3.select("#tooltip");
+
+function calculateSlope(country) {
+  const data = country.data.sort((a, b) => a.y - b.y);
+  if (data.length < 2) return 0;
+  const start = data[0];
+  const end = data[data.length - 1];
+  return (end.d - start.d) / (end.y - start.y);
+}
+
+function draw() {
+  const filtered = IBRD_DATA.filter(c =>
+    (currentRegion === "ALL" || c.group === currentRegion) && visibleCountries.has(c.code)
+  );
+
+  const svg = d3.select("#chart");
+  svg.selectAll("path, g.axis, text").remove();
+
+  const margin = {top: 20, right: 20, bottom: 40, left: 70};
+  const width = document.querySelector(".chart-container").offsetWidth - margin.left - margin.right;
+  const height = 450;
+
+  const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  const years = [...new Set(filtered.flatMap(c => c.data.map(d => d.y)))].sort((a, b) => a - b);
+  const maxDebt = Math.max(...filtered.flatMap(c => c.data.map(d => d.d)), 1);
+
+  const x = d3.scaleLinear().domain([years[0], years[years.length - 1]]).range([0, width]);
+  const y = d3.scaleLinear().domain([0, maxDebt]).range([height, 0]);
+
+  // Grid
+  g.append("g")
+    .attr("stroke", "#333")
+    .attr("opacity", "0.2")
+    .call(d3.axisLeft(y).tickSize(-width).tickFormat(""));
+
+  const line = d3.line()
+    .x(d => x(d.y))
+    .y(d => y(d.d));
+
+  // Draw paths with hover interaction
+  filtered.forEach(country => {
+    if (country.data.length < 2) return;
+
+    const slope = calculateSlope(country);
+    const strokeWidth = Math.max(2.5, Math.min(5.5, 3 + slope / 40));
+    const opacity = Math.max(0.35, Math.min(1, 0.55 + Math.abs(slope) / 800));
+
+    g.append("path")
+      .datum(country.data)
+      .attr("d", line)
+      .attr("stroke", country.color)
+      .attr("fill", "none")
+      .attr("stroke-width", strokeWidth)
+      .attr("opacity", opacity)
+      .attr("stroke-linecap", "round")
+      .attr("stroke-linejoin", "round")
+      .attr("class", "data-line")
+      .attr("data-country", country.code)
+      .style("cursor", "pointer")
+      .on("mouseover", function(event) {
+        d3.selectAll(".data-line").attr("opacity", d => 0.2);
+        d3.select(this).attr("opacity", 1).attr("stroke-width", strokeWidth + 2);
+
+        const lastPoint = country.data[country.data.length - 1];
+        tooltip.style("display", "block")
+          .html(`
+            <strong>${country.name}</strong><br/>
+            2024 Debt: $${lastPoint.d.toFixed(0)}M<br/>
+            Slope: ${slope.toFixed(2)}M/year<br/>
+            Period: ${country.data[0].y}-${lastPoint.y}
+          `)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px");
+      })
+      .on("mouseout", function() {
+        d3.selectAll(".data-line").attr("opacity", d => {
+          const c = filtered.find(c => c.code === d3.select(this).attr("data-country"));
+          if (!c) return 0.35;
+          const s = calculateSlope(c);
+          return Math.max(0.35, Math.min(1, 0.55 + Math.abs(s) / 800));
+        });
+        d3.selectAll(".data-line").attr("stroke-width", strokeWidth);
+        tooltip.style("display", "none");
+      });
+  });
+
+  // Axes
+  g.append("g")
+    .attr("transform", `translate(0, ${height})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format("d")))
+    .selectAll("text")
+    .style("font-size", "12px");
+
+  g.append("g")
+    .call(d3.axisLeft(y))
+    .selectAll("text")
+    .style("font-size", "12px");
+
+  // Legend with toggle functionality
+  const legend = d3.select("#legend");
+  legend.selectAll(".legend-item").remove();
+
+  IBRD_DATA.filter(c => currentRegion === "ALL" || c.group === currentRegion).forEach(country => {
+    const item = legend.append("div")
+      .attr("class", () => visibleCountries.has(country.code) ? "legend-item" : "legend-item disabled")
+      .on("click", function() {
+        if (visibleCountries.has(country.code)) {
+          visibleCountries.delete(country.code);
+          d3.select(this).classed("disabled", true);
+        } else {
+          visibleCountries.add(country.code);
+          d3.select(this).classed("disabled", false);
+        }
+        draw();
+      });
+
+    item.append("span")
+      .attr("class", "legend-color")
+      .style("background", country.color);
+
+    const lastDebt = country.data[country.data.length - 1].d;
+    const slope = calculateSlope(country);
+    item.append("span")
+      .html(`<strong>${country.name}</strong> $${lastDebt.toFixed(0)}M<br/><span style="font-size:11px;color:#aaa">slope: ${slope.toFixed(2)}M/yr</span>`);
+  });
+}
+
+function filterRegion(region) {
+  currentRegion = region;
+  visibleCountries = new Set(IBRD_DATA.filter(c => region === "ALL" || c.group === region).map(c => c.code));
+  document.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+  draw();
+}
+
+draw();
+window.addEventListener("resize", draw);
 </script>
+
 </body>
 </html>
