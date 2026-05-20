@@ -70,33 +70,6 @@
             border-top: 1px solid #555;
         }
 
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-left: auto;
-        }
-
-        .toggle-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 6px 12px;
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        .toggle-btn.active {
-            background: #4CAF50;
-            border-color: #45a049;
-        }
-
         .back-button {
             display: inline-block;
             background: rgba(255,255,255,0.2);
@@ -181,11 +154,6 @@
     <div class="container">
         <div class="header">
             <a href="index.html" class="back-button">← Back</a>
-            <h1>🗺️ IBRD Velocity Map v3</h1>
-            <div class="controls">
-                <button class="toggle-btn active" data-currency="usd">USD</button>
-                <button class="toggle-btn" data-currency="inr">₹ Lakh/Cr</button>
-            </div>
         </div>
 
         <div class="content">
@@ -198,69 +166,10 @@
     </div>
 
     <script>
-        let currentCurrency = 'usd';
-        const exchangeRate = 83; // 1 USD = 83 INR (approximate)
-
-        // Currency conversion utilities
-        const currencyUtils = {
-            formatINRLakh(value) {
-                const num = parseFloat(value) * exchangeRate; // Convert USD to INR
-
-                if (num >= 10000000) {
-                    return '₹' + (num / 10000000).toFixed(2) + ' Cr';
-                } else if (num >= 100000) {
-                    return '₹' + (num / 100000).toFixed(2) + ' L';
-                }
-                return '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-            },
-
-            formatUSD(value) {
-                return '$' + parseFloat(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
-            }
-        };
-
-        // Initialize currency toggle buttons
+        // Ensure proper viewport scaling on iOS
         document.addEventListener('DOMContentLoaded', function() {
             const viewport = document.querySelector('meta[name="viewport"]');
             viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
-
-            // Add currency toggle listeners
-            const currencyButtons = document.querySelectorAll('.toggle-btn');
-            currencyButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    currencyButtons.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentCurrency = this.dataset.currency;
-                    updateVisualization();
-                });
-            });
-        });
-
-        // Update visualization with new currency
-        function updateVisualization() {
-            const iframe = document.querySelector('iframe');
-            if (iframe && iframe.contentWindow) {
-                // Post message to iframe about currency change
-                iframe.contentWindow.postMessage({
-                    type: 'currency-change',
-                    currency: currentCurrency,
-                    exchangeRate: exchangeRate
-                }, '*');
-            }
-        }
-
-        // Receive messages from iframe
-        window.addEventListener('message', function(event) {
-            if (event.data.type === 'value-request') {
-                const formattedValue = currentCurrency === 'inr'
-                    ? currencyUtils.formatINRLakh(event.data.value)
-                    : currencyUtils.formatUSD(event.data.value);
-
-                event.source.postMessage({
-                    type: 'value-response',
-                    formatted: formattedValue
-                }, '*');
-            }
         });
 
         // Handle orientation changes
