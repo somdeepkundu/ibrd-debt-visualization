@@ -269,6 +269,37 @@ svg {
   color: #667eea;
 }
 
+.footer {
+  margin-top: 40px;
+  padding: 20px;
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.8;
+}
+
+.footer-section {
+  margin-bottom: 12px;
+}
+
+.footer-label {
+  color: #667eea;
+  font-weight: 700;
+  display: inline-block;
+  min-width: 100px;
+}
+
+.footer a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
 /* Scrollbar styling */
 .legend-sidebar::-webkit-scrollbar {
   width: 6px;
@@ -332,13 +363,32 @@ svg {
 
   <div class="note">
     <strong>📊 How to read:</strong><br/>
-    Each colored line represents one country's IBRD debt trajectory. Circular nodes mark data points.
+    Each colored line represents one country's IBRD debt trajectory. Segment thickness &amp; brightness show slope magnitude.
     <strong>Hover over any line segment</strong> to see:<br/>
     • Period start and end years<br/>
     • From/To debt values in millions (converted to Cr)<br/>
     • Change (Δ) in that period<br/>
     • Slope = growth rate per year (Cr/yr) with description (rapidly rising/gently rising/stable/declining)<br/>
-    <strong>Click legend items</strong> to toggle countries on/off
+    <strong>Segment encoding:</strong> Thicker &amp; brighter lines = steeper slope (faster growth). Click legend to toggle countries.
+  </div>
+
+  <div class="footer">
+    <div class="footer-section">
+      <span class="footer-label">📊 Data Source:</span>
+      <a href="https://data.worldbank.org/products/ids" target="_blank">World Bank International Debt Statistics (IDS)</a> | Updated 2024
+    </div>
+    <div class="footer-section">
+      <span class="footer-label">🔗 GitHub:</span>
+      <a href="https://github.com/somdeepkundu/ibrd-debt-visualization" target="_blank">github.com/somdeepkundu/ibrd-debt-visualization</a>
+    </div>
+    <div class="footer-section">
+      <span class="footer-label">👥 Created by:</span>
+      Saikat &amp; Somdeep Kundu
+    </div>
+    <div class="footer-section">
+      <span class="footer-label">💡 Visualization:</span>
+      D3.js v7 | Slope-weighted trajectory analysis of IBRD outstanding debt (IBRD-only, excluding IDA)
+    </div>
   </div>
 </div>
 
@@ -408,20 +458,9 @@ function draw() {
     .x(d => x(d.y))
     .y(d => y(d.d));
 
-  // Draw lines and segments
+  // Draw segments with slope encoding
   filtered.forEach(country => {
     if (country.data.length < 2) return;
-
-    // Draw main line
-    g.append("path")
-      .datum(country.data)
-      .attr("d", line)
-      .attr("stroke", country.color)
-      .attr("fill", "none")
-      .attr("stroke-width", 2.5)
-      .attr("opacity", 0.8)
-      .attr("stroke-linecap", "round")
-      .attr("stroke-linejoin", "round");
 
     // Draw segments and nodes for hover interaction
     for (let i = 0; i < country.data.length - 1; i++) {
@@ -429,24 +468,41 @@ function draw() {
       const p2 = country.data[i + 1];
       const slope = (p2.d - p1.d) / (p2.y - p1.y);
 
-      // Invisible thick line for hover detection
+      // Calculate stroke width and opacity based on slope
+      const absSlope = Math.abs(slope);
+      const strokeWidth = Math.max(1.5, Math.min(6, 2 + absSlope / 500));
+      const opacity = Math.max(0.4, Math.min(1, 0.5 + absSlope / 5000));
+
+      // Draw visible segment with slope encoding
+      g.append("line")
+        .attr("x1", x(p1.y))
+        .attr("y1", y(p1.d))
+        .attr("x2", x(p2.y))
+        .attr("y2", y(p2.d))
+        .attr("stroke", country.color)
+        .attr("stroke-width", strokeWidth)
+        .attr("opacity", opacity)
+        .attr("stroke-linecap", "round")
+        .attr("stroke-linejoin", "round")
+        .style("cursor", "pointer");
+
+      // Invisible thick line for hover detection (on top)
       g.append("line")
         .attr("x1", x(p1.y))
         .attr("y1", y(p1.d))
         .attr("x2", x(p2.y))
         .attr("y2", y(p2.d))
         .attr("stroke", "transparent")
-        .attr("stroke-width", 12)
+        .attr("stroke-width", 16)
         .style("cursor", "pointer")
         .on("mouseover", function(event) {
-          // Highlight this line
-          d3.selectAll("path").attr("opacity", 0.2);
-          d3.selectAll("circle").attr("opacity", 0.2);
+          // Dim all other segments
+          g.selectAll("line[stroke!='transparent']").attr("opacity", 0.15);
 
-          d3.select(this.parentNode)
-            .selectAll("path")
-            .filter((d, i) => i === IBRD_DATA.indexOf(country))
-            .attr("opacity", 1);
+          // Highlight this segment
+          d3.select(this.previousElementSibling)
+            .attr("opacity", 1)
+            .attr("stroke-width", strokeWidth + 1.5);
 
           const change = p2.d - p1.d;
           const tooltipHtml = `
@@ -479,24 +535,38 @@ function draw() {
             .style("top", (event.pageY - 10) + "px");
         })
         .on("mouseout", function() {
-          d3.selectAll("path").attr("opacity", 0.8);
-          d3.selectAll("circle").attr("opacity", 0.7);
+          // Restore all segments to normal
+          g.selectAll("line[stroke!='transparent']").each(function(d, i) {
+            const idx = Math.floor(i / 2); // Account for pair of lines per segment
+            if (idx < filtered.length) {
+              const c = filtered[idx];
+              if (idx < c.data.length - 1) {
+                const seg = c.data[idx];
+                const p1 = c.data[idx];
+                const p2 = c.data[idx + 1];
+                const s = (p2.d - p1.d) / (p2.y - p1.y);
+                const sw = Math.max(1.5, Math.min(6, 2 + Math.abs(s) / 500));
+                const op = Math.max(0.4, Math.min(1, 0.5 + Math.abs(s) / 5000));
+                d3.select(this).attr("opacity", op).attr("stroke-width", sw);
+              }
+            }
+          });
           tooltip.style("display", "none");
         });
     }
 
-    // Draw nodes
+    // Draw data point nodes
     g.selectAll(`.nodes-${country.code}`)
       .data(country.data)
       .enter()
       .append("circle")
       .attr("cx", d => x(d.y))
       .attr("cy", d => y(d.d))
-      .attr("r", 5)
+      .attr("r", 4)
       .attr("fill", country.color)
       .attr("stroke", "#fff")
-      .attr("stroke-width", 2)
-      .attr("opacity", 0.7);
+      .attr("stroke-width", 1.5)
+      .attr("opacity", 0.8);
   });
 
   // Axes
