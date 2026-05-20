@@ -1,222 +1,595 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IBRD Debt Visualization</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Debt Visualization Dashboard</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        .container {
-            background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
+html, body {
+  width: 100%;
+  height: 100%;
+}
 
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
+  color: #fff;
+  overflow-x: hidden;
+}
 
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 40px;
-            font-size: 16px;
-        }
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
 
-        .header-links {
-            text-align: right;
-            margin-bottom: 20px;
-        }
+/* Hero Section */
+.hero {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: fadeInDown 0.8s ease;
+}
 
-        .back-link {
-            display: inline-block;
-            color: #667eea;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            background: #f0f4ff;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
+.hero h1 {
+  font-size: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 15px;
+  font-weight: 800;
+}
 
-        .back-link:hover {
-            background: #667eea;
-            color: white;
-        }
+.hero p {
+  font-size: 18px;
+  color: #aaa;
+  margin-bottom: 20px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-        .visualizations {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
+.alert-banner {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(240, 147, 251, 0.1));
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 40px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-        .card {
-            background: #f8f9fa;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-        }
+.alert-banner strong {
+  color: #667eea;
+  display: block;
+  margin-bottom: 8px;
+}
 
-        .card:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
-        }
+/* Visualization Grid */
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 50px;
+}
 
-        .card h3 {
-            color: #667eea;
-            margin: 0 0 10px 0;
-            font-size: 18px;
-        }
+.viz-card {
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
 
-        .card p {
-            margin: 0;
-            color: #666;
-            font-size: 14px;
-            line-height: 1.5;
-            flex-grow: 1;
-        }
+.viz-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s;
+}
 
-        .card-button {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 8px 16px;
-            background: #667eea;
-            color: white;
-            border-radius: 4px;
-            text-align: center;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
+.viz-card:hover::before {
+  left: 100%;
+}
 
-        .card:hover .card-button {
-            background: #764ba2;
-        }
+.viz-card:hover {
+  border-color: rgba(102, 126, 234, 0.6);
+  background: rgba(26, 26, 46, 0.9);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2), 0 0 60px rgba(102, 126, 234, 0.1);
+}
 
-        .data-alert {
-            background: #fff3cd;
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.6;
-        }
+.viz-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  width: fit-content;
+}
 
-        .data-alert strong {
-            color: #ff6b00;
-        }
+.viz-badge.new {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+}
 
-        .featured-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: inline-block;
-        }
+.viz-badge.featured {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
 
-        @media (max-width: 768px) {
-            body {
-                padding: 20px 10px;
-            }
+.viz-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #fff;
+}
 
-            .container {
-                padding: 20px;
-            }
+.viz-description {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 20px;
+  flex-grow: 1;
+  line-height: 1.6;
+}
 
-            h1 {
-                font-size: 24px;
-            }
+.viz-features {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 20px;
+  border-left: 2px solid rgba(102, 126, 234, 0.3);
+  padding-left: 12px;
+}
 
-            .visualizations {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+.viz-features li {
+  list-style: none;
+  margin-bottom: 6px;
+}
+
+.viz-features li:before {
+  content: '✓ ';
+  color: #667eea;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.viz-btn {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.viz-btn:hover {
+  transform: translateX(4px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.viz-btn-secondary {
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  color: #667eea;
+}
+
+.viz-btn-secondary:hover {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+/* Category Sections */
+.category-section {
+  margin-bottom: 60px;
+}
+
+.category-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.category-subtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* Comparison Table */
+.comparison-table {
+  background: rgba(26, 26, 46, 0.6);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  padding: 30px;
+  margin-top: 40px;
+  backdrop-filter: blur(10px);
+  overflow-x: auto;
+}
+
+.comparison-table h3 {
+  margin-bottom: 20px;
+  color: #667eea;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+  font-size: 13px;
+}
+
+th {
+  background: rgba(102, 126, 234, 0.1);
+  font-weight: 700;
+  color: #667eea;
+}
+
+tr:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid rgba(102, 126, 234, 0.1);
+  color: #888;
+  font-size: 13px;
+}
+
+.footer a {
+  color: #667eea;
+  text-decoration: none;
+  margin: 0 8px;
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.viz-card {
+  animation: fadeInDown 0.6s ease backwards;
+}
+
+.viz-card:nth-child(1) { animation-delay: 0.1s; }
+.viz-card:nth-child(2) { animation-delay: 0.2s; }
+.viz-card:nth-child(3) { animation-delay: 0.3s; }
+.viz-card:nth-child(4) { animation-delay: 0.4s; }
+.viz-card:nth-child(5) { animation-delay: 0.5s; }
+.viz-card:nth-child(6) { animation-delay: 0.6s; }
+.viz-card:nth-child(7) { animation-delay: 0.7s; }
+.viz-card:nth-child(8) { animation-delay: 0.8s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 32px;
+  }
+
+  .viz-grid {
+    grid-template-columns: 1fr;
+  }
+
+  table {
+    font-size: 11px;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header-links">
-            <a href="https://somdeepkundu.github.io/projects/" class="back-link">← Back to Portfolio</a>
-        </div>
 
-        <h1>🌍 IBRD Debt Visualization</h1>
-        <p class="subtitle">Interactive visualizations of World Bank debt trajectories (1946-2025)</p>
-
-        <div class="data-alert">
-            <strong>✅ DATA CORRECTED:</strong> This project has been updated with verified data from the World Bank International Debt Statistics portal.
-            <br>Previous versions incorrectly mixed IBRD and IDA lending. Bangladesh now correctly shows $0 IBRD debt (IDA only), and Pakistan shows $2.62B (not $18-20B).
-        </div>
-
-        <div class="visualizations">
-            <a href="IBRD_Corrected_TimeSeries.html" class="card" style="grid-column: 1 / -1; border: 2px solid #ff9800;">
-                <span class="featured-badge">✨ CORRECTED - START HERE</span>
-                <h3>📊 Corrected Time Series (Verified Data)</h3>
-                <p><strong>Latest version with verified World Bank data.</strong> This visualization fixes the data accuracy issues found in earlier versions. Shows IBRD outstanding debt only, with Bangladesh correctly showing $0 IBRD (IDA only) and Pakistan showing $2.62B (not inflated figures).</p>
-                <span class="card-button">View Corrected Data →</span>
-            </a>
-
-            <a href="IBRD_Interactive_Timeline_1946-2025.html" class="card">
-                <h3>📅 Interactive Timeline</h3>
-                <p>Explore debt trajectories across decades with an interactive timeline</p>
-                <span class="card-button">Open →</span>
-            </a>
-
-            <a href="IBRD_TimeSeries_Chart.html" class="card">
-                <h3>📊 Time Series Chart</h3>
-                <p>Track debt changes over time with detailed line charts</p>
-                <span class="card-button">Open →</span>
-            </a>
-
-            <a href="IBRD_Slope_Interactive.html" class="card">
-                <h3>📈 Slope Interactive</h3>
-                <p>Compare debt trends and changes between different countries</p>
-                <span class="card-button">Open →</span>
-            </a>
-
-            <a href="IBRD_VelocityMap.html" class="card">
-                <h3>🗺️ Velocity Map</h3>
-                <p>Visualize the rate of change in debt across regions</p>
-                <span class="card-button">Open →</span>
-            </a>
-
-            <a href="IBRD_VelocityMap_v3_responsive.html" class="card">
-                <h3>🗺️ Velocity Map v3</h3>
-                <p>Advanced velocity visualization with enhanced mobile-responsive features</p>
-                <span class="card-button">Open →</span>
-            </a>
-
-            <a href="ibrd_shifts_20_years.html" class="card">
-                <h3>🔄 20-Year Shifts</h3>
-                <p>Analyze how debt patterns have shifted over 20-year periods</p>
-                <span class="card-button">Open →</span>
-            </a>
-        </div>
+<div class="container">
+  <!-- Hero Section -->
+  <div class="hero">
+    <h1>🌍 IBRD Debt Visualization</h1>
+    <p>Explore World Bank IBRD lending patterns across 78 years and 12+ countries with 12 interactive visualizations</p>
+    <div class="alert-banner">
+      <strong>✅ Verified Data</strong>
+      Data sourced from World Bank International Debt Statistics (IDS) portal. All figures are IBRD-only (excluding IDA concessional loans). Updated through 2024.
     </div>
+  </div>
+
+  <!-- New Modern Visualizations -->
+  <div class="category-section">
+    <h2 class="category-title">🎨 New Interactive Visualizations</h2>
+    <p class="category-subtitle">Modern, highly interactive charts with animations and real-time updates</p>
+
+    <div class="viz-grid">
+      <!-- Bubble Chart -->
+      <div class="viz-card">
+        <span class="viz-badge new">✨ NEW</span>
+        <div class="viz-title">🫧 Bubble Chart</div>
+        <div class="viz-description">Explore debt dynamics with an interactive bubble chart. Bubble size represents debt amount, position shows country ranking.</div>
+        <ul class="viz-features">
+          <li>Year slider for time progression</li>
+          <li>Real-time bubble sizing</li>
+          <li>Regional filtering</li>
+          <li>Hover tooltips</li>
+        </ul>
+        <a href="IBRD_BubbleChart_Interactive.html" class="viz-btn">Open Visualization →</a>
+      </div>
+
+      <!-- Bar Race -->
+      <div class="viz-card">
+        <span class="viz-badge new">✨ NEW</span>
+        <div class="viz-title">🏁 Bar Race</div>
+        <div class="viz-description">Watch countries race up and down the debt rankings in this animated bar chart. See dynamic shifts over 60+ years.</div>
+        <ul class="viz-features">
+          <li>Smooth animations</li>
+          <li>Adjustable speed control</li>
+          <li>Play/Pause/Reset buttons</li>
+          <li>Real-time value updates</li>
+        </ul>
+        <a href="IBRD_BarRace.html" class="viz-btn">Launch Animation →</a>
+      </div>
+
+      <!-- Stacked Area -->
+      <div class="viz-card">
+        <span class="viz-badge new">✨ NEW</span>
+        <div class="viz-title">📈 Stacked Area</div>
+        <div class="viz-description">See how each country contributes to total IBRD debt over time. Colors show individual debt trajectories.</div>
+        <ul class="viz-features">
+          <li>Composition view</li>
+          <li>Toggle countries</li>
+          <li>Regional grouping</li>
+          <li>Interactive legend</li>
+        </ul>
+        <a href="IBRD_StackedArea.html" class="viz-btn">View Chart →</a>
+      </div>
+
+      <!-- Heatmap -->
+      <div class="viz-card">
+        <span class="viz-badge new">✨ NEW</span>
+        <div class="viz-title">🔥 Heatmap</div>
+        <div class="viz-description">Interactive heatmap showing debt intensity across countries and years. Darker = higher debt.</div>
+        <ul class="viz-features">
+          <li>Multiple scales (Linear, Log, % Change)</li>
+          <li>Cell-level interactivity</li>
+          <li>Color-coded intensity</li>
+          <li>Hover details</li>
+        </ul>
+        <a href="IBRD_Heatmap.html" class="viz-btn">Explore Heatmap →</a>
+      </div>
+
+      <!-- Radial Chart -->
+      <div class="viz-card">
+        <span class="viz-badge new">✨ NEW</span>
+        <div class="viz-title">🔵 Radial Chart</div>
+        <div class="viz-description">Modern polar visualization showing IBRD debt in a circular layout. Each spoke represents one country.</div>
+        <ul class="viz-features">
+          <li>Circular layout</li>
+          <li>Concentric grid lines</li>
+          <li>Year progression slider</li>
+          <li>Top 8 or all countries</li>
+        </ul>
+        <a href="IBRD_RadialChart.html" class="viz-btn">View Polar Chart →</a>
+      </div>
+
+      <!-- Scatter Plot -->
+      <div class="viz-card">
+        <span class="viz-badge new">✨ NEW</span>
+        <div class="viz-title">📊 Scatter Plot</div>
+        <div class="viz-description">Growth rate vs debt size. X-axis shows annualized growth, bubble size shows accumulated debt.</div>
+        <ul class="viz-features">
+          <li>Multi-dimensional encoding</li>
+          <li>Growth rate comparison</li>
+          <li>Bubble sizing</li>
+          <li>Trend analysis</li>
+        </ul>
+        <a href="IBRD_Scatter.html" class="viz-btn">Analyze Growth →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Classic Visualizations -->
+  <div class="category-section">
+    <h2 class="category-title">📊 Core Visualizations</h2>
+    <p class="category-subtitle">Essential views for understanding IBRD debt patterns</p>
+
+    <div class="viz-grid">
+      <!-- Time Series -->
+      <div class="viz-card">
+        <span class="viz-badge">📈 FEATURED</span>
+        <div class="viz-title">Time Series Chart</div>
+        <div class="viz-description">Track IBRD debt evolution over 78 years (1946-2024). See how individual countries' debt has changed.</div>
+        <ul class="viz-features">
+          <li>Full historical timeline</li>
+          <li>Regional filtering</li>
+          <li>Smooth line transitions</li>
+          <li>Cross-country comparison</li>
+        </ul>
+        <a href="IBRD_TimeSeries_Chart.html" class="viz-btn">View Timeline →</a>
+      </div>
+
+      <!-- Velocity Map v3 -->
+      <div class="viz-card">
+        <span class="viz-badge featured">✨ FEATURED v3</span>
+        <div class="viz-title">Velocity Map (Advanced)</div>
+        <div class="viz-description">Slope-weighted visualization showing both debt magnitude and growth rate. Most advanced version.</div>
+        <ul class="viz-features">
+          <li>Line thickness = magnitude</li>
+          <li>Opacity = growth rate</li>
+          <li>Regional views</li>
+          <li>Slope-weighted encoding</li>
+        </ul>
+        <a href="IBRD_VelocityMap_v3.html" class="viz-btn">Advanced View →</a>
+      </div>
+
+      <!-- 20-Year Shifts -->
+      <div class="viz-card">
+        <span class="viz-badge">📊 ANALYSIS</span>
+        <div class="viz-title">20-Year Shifts</div>
+        <div class="viz-description">Analyze debt changes in 20-year windows. Green = debt increase, Red = debt decrease.</div>
+        <ul class="viz-features">
+          <li>Three period options</li>
+          <li>Net change visualization</li>
+          <li>Magnitude encoding</li>
+          <li>Debt flow analysis</li>
+        </ul>
+        <a href="ibrd_shifts_20_years.html" class="viz-btn">Compare Periods →</a>
+      </div>
+
+      <!-- Slope Interactive -->
+      <div class="viz-card">
+        <span class="viz-badge">📊 ANALYSIS</span>
+        <div class="viz-title">Slope Comparison</div>
+        <div class="viz-description">Compare 1946 vs 2024 debt levels. Steeper slopes = faster growth over 78-year period.</div>
+        <ul class="viz-features">
+          <li>Trajectory comparison</li>
+          <li>Historical context</li>
+          <li>Growth visualization</li>
+          <li>Regional filtering</li>
+        </ul>
+        <a href="IBRD_Slope_Interactive.html" class="viz-btn">View Slopes →</a>
+      </div>
+
+      <!-- Velocity Map Original -->
+      <div class="viz-card">
+        <span class="viz-badge">📊 CLASSIC</span>
+        <div class="viz-title">Velocity Map</div>
+        <div class="viz-description">Original velocity-encoded visualization. Line thickness and brightness show debt patterns.</div>
+        <ul class="viz-features">
+          <li>Velocity encoding</li>
+          <li>Line thickness</li>
+          <li>Brightness variation</li>
+          <li>Regional focus</li>
+        </ul>
+        <a href="IBRD_VelocityMap.html" class="viz-btn">View Velocity →</a>
+      </div>
+
+      <!-- Interactive Timeline -->
+      <div class="viz-card">
+        <span class="viz-badge">📊 CLASSIC</span>
+        <div class="viz-title">Interactive Timeline</div>
+        <div class="viz-description">Year-by-year breakdown with adjustable slider. See instant rankings for any year 1946-2024.</div>
+        <ul class="viz-features">
+          <li>Year slider control</li>
+          <li>Bar chart view</li>
+          <li>Live comparison</li>
+          <li>Regional filtering</li>
+        </ul>
+        <a href="IBRD_Interactive_Timeline_1946-2025.html" class="viz-btn">Slide Through Time →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="comparison-table">
+    <h3>Quick Visualization Comparison</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Visualization</th>
+          <th>Best For</th>
+          <th>Interaction</th>
+          <th>Time Focus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>🫧 Bubble Chart</strong></td>
+          <td>Single-year debt ranking exploration</td>
+          <td>Year slider, hover</td>
+          <td>Point-in-time</td>
+        </tr>
+        <tr>
+          <td><strong>🏁 Bar Race</strong></td>
+          <td>Animated ranking evolution</td>
+          <td>Play/Pause, speed control</td>
+          <td>Continuous 1960-2024</td>
+        </tr>
+        <tr>
+          <td><strong>📈 Stacked Area</strong></td>
+          <td>Debt composition over time</td>
+          <td>Toggle countries, region filter</td>
+          <td>Full timeline</td>
+        </tr>
+        <tr>
+          <td><strong>🔥 Heatmap</strong></td>
+          <td>Pattern detection across dimensions</td>
+          <td>Multiple scales, hover</td>
+          <td>Grid view</td>
+        </tr>
+        <tr>
+          <td><strong>🔵 Radial Chart</strong></td>
+          <td>Modern circular debt visualization</td>
+          <td>Year slider, view toggle</td>
+          <td>Point-in-time</td>
+        </tr>
+        <tr>
+          <td><strong>📊 Scatter Plot</strong></td>
+          <td>Growth analysis vs debt size</td>
+          <td>Hover for details</td>
+          <td>2024 snapshot</td>
+        </tr>
+        <tr>
+          <td><strong>Time Series</strong></td>
+          <td>Individual country trends</td>
+          <td>Region filtering, hover</td>
+          <td>Full timeline</td>
+        </tr>
+        <tr>
+          <td><strong>Velocity Map v3</strong></td>
+          <td>Advanced slope-weighted view</td>
+          <td>Region filter</td>
+          <td>Full timeline</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>🌐 IBRD Debt Visualization Dashboard | Data Source: <a href="https://data.worldbank.org/" target="_blank">World Bank International Debt Statistics</a></p>
+    <p style="margin-top: 15px; font-size: 12px;">
+      <a href="https://github.com/somdeepkundu/ibrd-debt-visualization" target="_blank">View on GitHub</a> |
+      All data verified and corrected (2024)
+    </p>
+  </div>
+</div>
+
 </body>
 </html>
