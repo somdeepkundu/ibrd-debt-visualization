@@ -1,6 +1,7 @@
 # IBRD Debt Visualization
 
 Interactive visualizations of World Bank debt trajectories from 1946 to 2025.
+[Click here to explore](https://somdeepkundu.github.io/ibrd-debt-visualization/IBRD_VelocityMap_v3_responsive.html)
 
 ## Visualizations
 
