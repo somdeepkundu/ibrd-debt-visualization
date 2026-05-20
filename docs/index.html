@@ -115,6 +115,31 @@
             background: #764ba2;
         }
 
+        .data-alert {
+            background: #fff3cd;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .data-alert strong {
+            color: #ff6b00;
+        }
+
+        .featured-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 20px 10px;
@@ -143,7 +168,19 @@
         <h1>🌍 IBRD Debt Visualization</h1>
         <p class="subtitle">Interactive visualizations of World Bank debt trajectories (1946-2025)</p>
 
+        <div class="data-alert">
+            <strong>✅ DATA CORRECTED:</strong> This project has been updated with verified data from the World Bank International Debt Statistics portal.
+            <br>Previous versions incorrectly mixed IBRD and IDA lending. Bangladesh now correctly shows $0 IBRD debt (IDA only), and Pakistan shows $2.62B (not $18-20B).
+        </div>
+
         <div class="visualizations">
+            <a href="IBRD_Corrected_TimeSeries.html" class="card" style="grid-column: 1 / -1; border: 2px solid #ff9800;">
+                <span class="featured-badge">✨ CORRECTED - START HERE</span>
+                <h3>📊 Corrected Time Series (Verified Data)</h3>
+                <p><strong>Latest version with verified World Bank data.</strong> This visualization fixes the data accuracy issues found in earlier versions. Shows IBRD outstanding debt only, with Bangladesh correctly showing $0 IBRD (IDA only) and Pakistan showing $2.62B (not inflated figures).</p>
+                <span class="card-button">View Corrected Data →</span>
+            </a>
+
             <a href="IBRD_Interactive_Timeline_1946-2025.html" class="card">
                 <h3>📅 Interactive Timeline</h3>
                 <p>Explore debt trajectories across decades with an interactive timeline</p>

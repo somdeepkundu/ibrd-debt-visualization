@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python -m git_filter_repo --path \"Downloads/Somdeep Portfolio/\" --invert-paths --force)",
+      "Bash(git remote *)"
+    ]
+  }
+}
