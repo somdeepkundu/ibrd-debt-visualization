@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Scatter Plot - Growth vs Size</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 30px 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.chart-wrapper {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+svg {
+  width: 100%;
+  height: 550px;
+}
+
+.scatter-dot {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.scatter-dot:hover {
+  stroke: #fff;
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 8px rgba(102, 126, 234, 0.6));
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(20, 20, 35, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.axis-label {
+  font-size: 13px;
+  fill: #aaa;
+  font-weight: 600;
+}
+
+.note {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📊 Scatter Plot: Growth vs Debt Size</h1>
+    <p>X-axis = Average annual growth rate | Y-axis = 2024 debt | Bubble size = total historical debt</p>
+  </div>
+
+  <div class="chart-wrapper">
+    <svg id="chart"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="note">
+    <strong>💡 How to read:</strong> Each circle is a country. Position shows growth rate (right = faster growth) vs 2024 debt. Bubble size represents total debt accumulated over time. Hover for details. Countries in upper-right corner: high debt + fast growth.
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none;"></div>
+
+<script>
+const IBRD_DATA = [
+  {name:"India",code:"IND",color:"#FF6B6B",data:[{y:1946,d:0},{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]}
+];
+
+const tooltip = d3.select("#tooltip");
+
+function calculateMetrics(country) {
+  const data = country.data.sort((a, b) => a.y - b.y);
+  const start = data[0];
+  const end = data[data.length - 1];
+
+  // Growth rate (annualized)
+  const years = end.y - start.y;
+  const growthRate = years > 0 ? ((end.d / start.d) ** (1 / years) - 1) * 100 : 0;
+
+  // Total accumulated debt (sum of all data points)
+  const totalAccumulated = data.reduce((sum, d) => sum + d.d, 0);
+
+  return {
+    growthRate: isFinite(growthRate) ? growthRate : 0,
+    currentDebt: end.d,
+    accumulatedDebt: totalAccumulated,
+    startYear: start.y,
+    endYear: end.y
+  };
+}
+
+const chartData = IBRD_DATA.map(c => ({
+  ...c,
+  ...calculateMetrics(c)
+})).filter(c => c.currentDebt > 0);
+
+const svg = d3.select("#chart");
+const width = document.querySelector(".chart-wrapper").offsetWidth - 50;
+const height = 500;
+const margin = {top: 20, right: 30, bottom: 60, left: 80};
+
+const g = svg.append("g").attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+const xScale = d3.scaleLinear()
+  .domain(d3.extent(chartData, d => d.growthRate))
+  .range([0, width - margin.left - margin.right]);
+
+const yScale = d3.scaleLinear()
+  .domain([0, d3.max(chartData, d => d.currentDebt)])
+  .range([height - margin.top - margin.bottom, 0]);
+
+const radiusScale = d3.scaleLinear()
+  .domain([0, d3.max(chartData, d => d.accumulatedDebt)])
+  .range([10, 60]);
+
+// Draw grid
+g.append("g")
+  .attr("stroke", "rgba(102, 126, 234, 0.1)")
+  .attr("stroke-width", 1)
+  .call(d3.axisLeft(yScale).tickSize(-(width - margin.left - margin.right)).tickFormat(""));
+
+// Draw data points
+g.selectAll(".dot")
+  .data(chartData)
+  .enter()
+  .append("circle")
+  .attr("class", "scatter-dot")
+  .attr("cx", d => xScale(d.growthRate))
+  .attr("cy", d => yScale(d.currentDebt))
+  .attr("r", d => radiusScale(d.accumulatedDebt))
+  .attr("fill", d => d.color)
+  .attr("opacity", 0.7)
+  .on("mouseover", function(event, d) {
+    d3.select(this).attr("opacity", 1);
+    tooltip.style("display", "block")
+      .html(`
+        <strong>${d.name}</strong><br/>
+        2024 Debt: $${d.currentDebt.toFixed(0)}M<br/>
+        Growth Rate: ${d.growthRate.toFixed(2)}% /year<br/>
+        Period: ${d.startYear}-${d.endYear}
+      `)
+      .style("left", (event.pageX + 10) + "px")
+      .style("top", (event.pageY - 10) + "px");
+  })
+  .on("mouseout", function() {
+    d3.select(this).attr("opacity", 0.7);
+    tooltip.style("display", "none");
+  });
+
+// Add labels
+g.selectAll(".label")
+  .data(chartData)
+  .enter()
+  .append("text")
+  .attr("x", d => xScale(d.growthRate))
+  .attr("y", d => yScale(d.currentDebt) - radiusScale(d.accumulatedDebt) - 8)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "11px")
+  .attr("fill", "#aaa")
+  .attr("font-weight", 600)
+  .text(d => d.code);
+
+// Draw axes
+g.append("g")
+  .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
+  .call(d3.axisBottom(xScale))
+  .selectAll("text")
+  .attr("font-size", "12px");
+
+g.append("g")
+  .call(d3.axisLeft(yScale))
+  .selectAll("text")
+  .attr("font-size", "12px");
+
+// Axis labels
+g.append("text")
+  .attr("class", "axis-label")
+  .attr("x", (width - margin.left - margin.right) / 2)
+  .attr("y", height - margin.top - margin.bottom + 45)
+  .attr("text-anchor", "middle")
+  .text("Average Annual Growth Rate (%)");
+
+g.append("text")
+  .attr("class", "axis-label")
+  .attr("transform", "rotate(-90)")
+  .attr("x", -(height - margin.top - margin.bottom) / 2)
+  .attr("y", -60)
+  .attr("text-anchor", "middle")
+  .text("2024 Outstanding Debt (USD Millions)");
+
+// Reference line at zero growth
+g.append("line")
+  .attr("x1", xScale(0))
+  .attr("y1", 0)
+  .attr("x2", xScale(0))
+  .attr("y2", height - margin.top - margin.bottom)
+  .attr("stroke", "rgba(102, 126, 234, 0.2)")
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "4");
+
+// Legend
+const legend = d3.select("#legend");
+legend.selectAll(".legend-item").remove();
+chartData.sort((a, b) => b.currentDebt - a.currentDebt).slice(0, 6).forEach(d => {
+  const item = legend.append("div").attr("class", "legend-item");
+  item.append("span")
+    .attr("class", "legend-color")
+    .style("background", d.color);
+  item.append("span")
+    .text(`${d.name}: $${d.currentDebt.toFixed(0)}M`);
+});
+</script>
+
+</body>
+</html>

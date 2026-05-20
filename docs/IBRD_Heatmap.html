@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Debt Heatmap</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 30px 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+  justify-content: center;
+}
+
+.control-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: rgba(102, 126, 234, 0.05);
+  color: #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.control-btn:hover,
+.control-btn.active {
+  background: #667eea;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+}
+
+.chart-wrapper {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+  overflow-x: auto;
+}
+
+svg {
+  font-size: 11px;
+}
+
+.heatmap-cell {
+  stroke: rgba(15, 15, 30, 0.5);
+  stroke-width: 1px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.heatmap-cell:hover {
+  opacity: 1 !important;
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(20, 20, 35, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.legend-scale {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legend-scale-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.legend-scale-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+}
+
+.note {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🔥 Interactive Heatmap</h1>
+    <p>See IBRD debt intensity across countries and years - darker = higher debt</p>
+  </div>
+
+  <div class="controls">
+    <button class="control-btn active" data-scale="linear">Linear Scale</button>
+    <button class="control-btn" data-scale="log">Log Scale</button>
+    <button class="control-btn" data-scale="percent">Percentage Change</button>
+  </div>
+
+  <div class="chart-wrapper">
+    <svg id="chart"></svg>
+    <div class="legend-scale" id="legend"></div>
+  </div>
+
+  <div class="note">
+    <strong>💡 How to read:</strong> Each cell represents one country in one year. Color intensity shows debt level (lighter = lower, darker = higher). Hover over cells to see exact values. Use different scales to see patterns more clearly.
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none;"></div>
+
+<script>
+const IBRD_DATA = [
+  {name:"India",code:"IND",data:[{y:1946,d:0},{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]},
+  {name:"Bangladesh",code:"BGD",data:[{y:1971,d:0},{y:2024,d:0}]}
+];
+
+const years = [1960, 1970, 1980, 1990, 2000, 2010, 2020, 2024];
+let currentScale = "linear";
+
+const tooltip = d3.select("#tooltip");
+
+function getDebtAtYear(country, year) {
+  const data = country.data.sort((a, b) => a.y - b.y);
+  for (let i = 0; i < data.length - 1; i++) {
+    if (data[i].y <= year && year <= data[i + 1].y) {
+      const ratio = (year - data[i].y) / (data[i + 1].y - data[i].y);
+      return data[i].d + (data[i + 1].d - data[i].d) * ratio;
+    }
+  }
+  return data[data.length - 1].d;
+}
+
+function updateChart() {
+  const data = IBRD_DATA.filter(c => c.data.length > 0);
+
+  let matrix = [];
+  data.forEach(country => {
+    years.forEach(year => {
+      matrix.push({
+        country: country.code,
+        countryName: country.name,
+        year,
+        debt: getDebtAtYear(country, year)
+      });
+    });
+  });
+
+  // Apply scaling
+  if (currentScale === "log") {
+    matrix = matrix.map(d => ({
+      ...d,
+      value: d.debt > 0 ? Math.log10(d.debt + 1) : 0
+    }));
+  } else if (currentScale === "percent") {
+    // Calculate percentage change from first value
+    matrix = matrix.map(d => {
+      const first = matrix.find(m => m.country === d.country && m.year === years[0]);
+      return {
+        ...d,
+        value: first && first.debt > 0 ? ((d.debt - first.debt) / first.debt) * 100 : 0
+      };
+    });
+  } else {
+    matrix = matrix.map(d => ({ ...d, value: d.debt }));
+  }
+
+  const maxValue = Math.max(...matrix.map(d => d.value));
+  const svg = d3.select("#chart");
+  svg.selectAll("*").remove();
+
+  const cellSize = 40;
+  const width = years.length * cellSize + 100;
+  const height = data.length * cellSize + 50;
+
+  const g = svg.attr("width", width).attr("height", height)
+    .append("g").attr("transform", "translate(100, 30)");
+
+  const colorScale = d3.scaleLinear()
+    .domain([0, maxValue / 2, maxValue])
+    .range(["rgba(102, 126, 234, 0.2)", "rgba(102, 126, 234, 0.6)", "rgba(255, 107, 107, 1)"]);
+
+  // Draw cells
+  g.selectAll(".cell")
+    .data(matrix)
+    .enter()
+    .append("rect")
+    .attr("class", "heatmap-cell")
+    .attr("x", d => years.indexOf(d.year) * cellSize)
+    .attr("y", (d, i) => Math.floor(i / years.length) * cellSize)
+    .attr("width", cellSize - 1)
+    .attr("height", cellSize - 1)
+    .attr("fill", d => colorScale(d.value))
+    .attr("opacity", d => d.value > 0 ? 0.8 : 0.3)
+    .on("mouseover", function(event, d) {
+      d3.select(this).attr("opacity", 1);
+      let text = `<strong>${d.countryName}</strong><br/>Year: ${d.year}`;
+      if (currentScale === "linear") {
+        text += `<br/>Debt: $${d.debt.toFixed(0)}M`;
+      } else if (currentScale === "log") {
+        text += `<br/>Log Debt: ${d.value.toFixed(2)}`;
+      } else {
+        text += `<br/>Change: ${d.value.toFixed(1)}%`;
+      }
+      tooltip.style("display", "block")
+        .html(text)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mouseout", function() {
+      d3.select(this).attr("opacity", d => d.value > 0 ? 0.8 : 0.3);
+      tooltip.style("display", "none");
+    });
+
+  // Add year labels
+  g.selectAll(".year-label")
+    .data(years)
+    .enter()
+    .append("text")
+    .attr("x", (d, i) => i * cellSize + cellSize / 2)
+    .attr("y", -10)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("fill", "#aaa")
+    .text(d => d);
+
+  // Add country labels
+  g.selectAll(".country-label")
+    .data(data)
+    .enter()
+    .append("text")
+    .attr("x", -10)
+    .attr("y", (d, i) => i * cellSize + cellSize / 2 + 4)
+    .attr("text-anchor", "end")
+    .attr("font-size", "12px")
+    .attr("fill", "#aaa")
+    .text(d => d.code);
+
+  // Update legend
+  const legend = d3.select("#legend");
+  legend.selectAll("*").remove();
+
+  const scale = [0, maxValue / 4, maxValue / 2, (3 * maxValue) / 4, maxValue];
+  const labels = currentScale === "linear" ? scale.map(d => `$${d.toFixed(0)}M`) :
+                 currentScale === "log" ? scale.map(d => Math.log10(d + 1).toFixed(1)) :
+                 scale.map(d => `${d.toFixed(0)}%`);
+
+  scale.forEach((value, i) => {
+    const item = legend.append("div").attr("class", "legend-scale-item");
+    item.append("div")
+      .attr("class", "legend-scale-color")
+      .style("background", colorScale(value));
+    item.append("span").text(labels[i]);
+  });
+}
+
+d3.selectAll(".control-btn").on("click", function() {
+  d3.selectAll(".control-btn").classed("active", false);
+  d3.select(this).classed("active", true);
+  currentScale = this.dataset.scale;
+  updateChart();
+});
+
+updateChart();
+</script>
+
+</body>
+</html>

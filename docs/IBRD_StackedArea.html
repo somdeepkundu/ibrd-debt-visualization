@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Stacked Area Chart</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 30px 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+  justify-content: center;
+}
+
+.control-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: rgba(102, 126, 234, 0.05);
+  color: #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.control-btn:hover,
+.control-btn.active {
+  background: #667eea;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+}
+
+.chart-wrapper {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+svg {
+  width: 100%;
+  height: 550px;
+}
+
+.area {
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+}
+
+.area:hover {
+  opacity: 1;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(20, 20, 35, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.note {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>📈 Stacked Area Chart</h1>
+    <p>See how individual countries contribute to total IBRD debt over time</p>
+  </div>
+
+  <div class="controls">
+    <button class="control-btn active" data-type="top10">Top 10 Countries</button>
+    <button class="control-btn" data-type="saarc">SAARC Region</button>
+    <button class="control-btn" data-type="brics">BRICS+ Region</button>
+    <button class="control-btn" data-type="americas">Americas</button>
+  </div>
+
+  <div class="chart-wrapper">
+    <svg id="chart"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="note">
+    <strong>💡 How to read:</strong> Each colored area represents one country's debt. The height shows the amount, and the total height is the sum of all debts. Hover over areas to see details. Click legend items to toggle countries.
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none;"></div>
+
+<script>
+const IBRD_DATA = [
+  {name:"India",code:"IND",group:"SAARC",color:"#FF6B6B",data:[{y:1946,d:0},{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",group:"ASIA",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",group:"LAT",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",group:"ALL",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",group:"ASIA",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",group:"BRICS",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",group:"BRICS",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",group:"ALL",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",group:"LAT",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",group:"LAT",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",group:"SAARC",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]}
+];
+
+const groupFilters = {
+  "top10": IBRD_DATA,
+  "saarc": IBRD_DATA.filter(c => ["SAARC","IND","PAK"].includes(c.group) || c.group === "SAARC"),
+  "brics": IBRD_DATA.filter(c => ["BRICS","IND","BRA","CHN"].includes(c.group) || c.group === "BRICS"),
+  "americas": IBRD_DATA.filter(c => ["LAT","BRA","MEX","COL","ARG"].includes(c.code))
+};
+
+let currentType = "top10";
+let activeCountries = new Set(groupFilters[currentType].map(d => d.code));
+
+const tooltip = d3.select("#tooltip");
+
+function updateChart() {
+  const data = groupFilters[currentType].filter(c => activeCountries.has(c.code));
+
+  const svg = d3.select("#chart");
+  svg.selectAll("*").remove();
+
+  const width = document.querySelector(".chart-wrapper").offsetWidth - 50;
+  const height = 500;
+  const margin = {top: 20, right: 30, bottom: 50, left: 70};
+
+  const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+  // Get all years
+  const allYears = [...new Set(data.flatMap(c => c.data.map(d => d.y)))].sort((a, b) => a - b);
+
+  // Create matrix data
+  const matrixData = allYears.map(year => {
+    const row = {year};
+    data.forEach(c => {
+      row[c.code] = c.data.find(d => d.y === year)?.d || 0;
+    });
+    return row;
+  });
+
+  const x = d3.scaleLinear().domain([allYears[0], allYears[allYears.length - 1]]).range([0, width - margin.left - margin.right]);
+  const y = d3.scaleLinear().domain([0, d3.max(matrixData, row => data.reduce((sum, c) => sum + row[c.code], 0))]).range([height - margin.top - margin.bottom, 0]);
+
+  // Draw grid
+  g.append("g")
+    .attr("stroke", "rgba(102, 126, 234, 0.1)")
+    .attr("stroke-width", 1)
+    .call(d3.axisLeft(y).tickSize(-(width - margin.left - margin.right)).tickFormat(""));
+
+  const stack = d3.stack().keys(data.map(c => c.code));
+  const stackedData = stack(matrixData);
+
+  const area = d3.area()
+    .x(d => x(d.data.year))
+    .y0(d => y(d[0]))
+    .y1(d => y(d[1]));
+
+  // Draw areas
+  g.selectAll(".area")
+    .data(stackedData)
+    .enter()
+    .append("path")
+    .attr("class", "area")
+    .attr("d", area)
+    .attr("fill", d => data.find(c => c.code === d.key).color)
+    .on("mouseover", function(event, d) {
+      d3.select(this).style("opacity", 1).style("stroke", "#fff").style("stroke-width", 2);
+      const country = data.find(c => c.code === d.key);
+      tooltip.style("display", "block")
+        .html(`<strong>${country.name}</strong><br/>IBRD Debt Growth`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mouseout", function() {
+      d3.select(this).style("opacity", 0.75).style("stroke", "none");
+      tooltip.style("display", "none");
+    });
+
+  // Add axes
+  g.append("g")
+    .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+    .call(d3.axisBottom(x).tickFormat(d3.format("d")))
+    .selectAll("text")
+    .style("font-size", "12px");
+
+  g.append("g")
+    .call(d3.axisLeft(y))
+    .selectAll("text")
+    .style("font-size", "12px");
+
+  // Update legend
+  const legend = d3.select("#legend");
+  legend.selectAll(".legend-item").remove();
+  data.forEach(c => {
+    const item = legend.append("div")
+      .attr("class", "legend-item")
+      .style("opacity", activeCountries.has(c.code) ? 1 : 0.5);
+    item.append("span")
+      .attr("class", "legend-color")
+      .style("background", c.color);
+    item.append("span")
+      .text(c.name)
+      .on("click", function() {
+        if (activeCountries.has(c.code)) {
+          activeCountries.delete(c.code);
+        } else {
+          activeCountries.add(c.code);
+        }
+        updateChart();
+      })
+      .style("cursor", "pointer");
+  });
+}
+
+d3.selectAll(".control-btn").on("click", function() {
+  d3.selectAll(".control-btn").classed("active", false);
+  d3.select(this).classed("active", true);
+  currentType = this.dataset.type;
+  activeCountries = new Set(groupFilters[currentType].map(d => d.code));
+  updateChart();
+});
+
+updateChart();
+</script>
+
+</body>
+</html>

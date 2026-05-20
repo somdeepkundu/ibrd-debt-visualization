@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Bubble Chart - Interactive Explorer</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 30px 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+  justify-content: center;
+  align-items: center;
+}
+
+.year-slider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.year-slider input {
+  width: 150px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(102, 126, 234, 0.3);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.year-slider input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+.year-slider input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+.year-display {
+  min-width: 80px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #667eea;
+}
+
+.region-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: rgba(102, 126, 234, 0.05);
+  color: #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  background: #667eea;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+}
+
+.chart-wrapper {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+#chart {
+  width: 100%;
+  height: 500px;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(20, 20, 35, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.info-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.info-card {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.note {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🫧 Interactive Bubble Chart</h1>
+    <p>Explore IBRD debt dynamics - bubble size = debt amount, position = country ranking</p>
+  </div>
+
+  <div class="controls">
+    <div class="year-slider">
+      <label for="yearSlider">Year:</label>
+      <input type="range" id="yearSlider" min="1946" max="2024" value="2024" step="1">
+      <div class="year-display" id="yearDisplay">2024</div>
+    </div>
+    <div class="region-filter">
+      <button class="filter-btn active" data-region="ALL">All Countries</button>
+      <button class="filter-btn" data-region="SAARC">SAARC</button>
+      <button class="filter-btn" data-region="BRICS">BRICS+</button>
+      <button class="filter-btn" data-region="LAT">Latin America</button>
+    </div>
+  </div>
+
+  <div class="info-panel">
+    <div class="info-card">
+      <div class="info-label">Total IBRD Debt</div>
+      <div class="info-value" id="totalDebt">-</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">Highest Debtor</div>
+      <div class="info-value" id="topDebtor">-</div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">Countries Tracked</div>
+      <div class="info-value" id="countryCount">-</div>
+    </div>
+  </div>
+
+  <div class="chart-wrapper">
+    <svg id="chart"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="note">
+    <strong>💡 How to use:</strong> Drag the year slider to see how debt patterns evolved. Hover over bubbles for details. Filter by region to focus on specific areas. Bubble size represents outstanding IBRD debt in USD millions.
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none;"></div>
+
+<script>
+const IBRD_DATA = [
+  {name:"India",code:"IND",group:"SAARC",color:"#FF6B6B",data:[{y:1946,d:0},{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",group:"ASIA",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",group:"LAT",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",group:"ALL",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",group:"ASIA",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",group:"BRICS",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",group:"BRICS",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",group:"ALL",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",group:"LAT",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",group:"LAT",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",group:"SAARC",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]},
+  {name:"Bangladesh",code:"BGD",group:"SAARC",color:"#999",data:[{y:1971,d:0},{y:2024,d:0}]}
+];
+
+let currentYear = 2024;
+let currentRegion = "ALL";
+
+const tooltip = d3.select("#tooltip");
+
+function getDebtAtYear(country, year) {
+  const data = country.data.sort((a, b) => a.y - b.y);
+  for (let i = 0; i < data.length - 1; i++) {
+    if (data[i].y <= year && year <= data[i + 1].y) {
+      const ratio = (year - data[i].y) / (data[i + 1].y - data[i].y);
+      return data[i].d + (data[i + 1].d - data[i].d) * ratio;
+    }
+  }
+  return data[data.length - 1].d;
+}
+
+function updateChart() {
+  const filtered = IBRD_DATA.filter(c => currentRegion === "ALL" || c.group === currentRegion);
+  const chartData = filtered.map(c => ({
+    ...c,
+    debt: getDebtAtYear(c, currentYear)
+  })).filter(c => c.debt > 0).sort((a, b) => b.debt - a.debt);
+
+  const svg = d3.select("#chart");
+  svg.selectAll("*").remove();
+
+  const width = document.querySelector(".chart-wrapper").offsetWidth - 50;
+  const height = 500;
+  const margin = 40;
+
+  const g = svg.append("g").attr("transform", `translate(${margin}, ${margin})`);
+
+  const maxDebt = Math.max(...chartData.map(d => d.debt));
+  const radiusScale = d3.scaleSqrt().domain([0, maxDebt]).range([10, 80]);
+  const xScale = d3.scaleLinear().domain([0, chartData.length]).range([0, width - 2 * margin]);
+  const yScale = d3.scaleLinear().domain([0, maxDebt]).range([height - 2 * margin, 0]);
+
+  // Draw grid
+  g.append("g")
+    .attr("stroke", "rgba(102, 126, 234, 0.1)")
+    .attr("stroke-width", 1)
+    .call(d3.axisLeft(yScale).tickSize(-(width - 2 * margin)).tickFormat(""));
+
+  // Draw bubbles
+  g.selectAll(".bubble")
+    .data(chartData)
+    .enter()
+    .append("circle")
+    .attr("class", "bubble")
+    .attr("cx", (d, i) => xScale(i + 0.5))
+    .attr("cy", d => yScale(d.debt))
+    .attr("r", d => radiusScale(d.debt))
+    .attr("fill", d => d.color)
+    .attr("opacity", 0.7)
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 2)
+    .style("cursor", "pointer")
+    .on("mouseover", function(event, d) {
+      d3.select(this).attr("opacity", 1).attr("stroke-width", 3);
+      tooltip.style("display", "block")
+        .html(`<strong>${d.name}</strong><br/>Debt: $${d.debt.toFixed(0)}M<br/>Year: ${currentYear}`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mouseout", function() {
+      d3.select(this).attr("opacity", 0.7).attr("stroke-width", 2);
+      tooltip.style("display", "none");
+    });
+
+  // Add country labels
+  g.selectAll(".label")
+    .data(chartData)
+    .enter()
+    .append("text")
+    .attr("class", "label")
+    .attr("x", (d, i) => xScale(i + 0.5))
+    .attr("y", d => yScale(d.debt) + radiusScale(d.debt) + 20)
+    .attr("text-anchor", "middle")
+    .attr("font-size", "12px")
+    .attr("fill", "#aaa")
+    .text(d => d.code);
+
+  // Update info panel
+  const totalDebt = chartData.reduce((sum, d) => sum + d.debt, 0);
+  d3.select("#totalDebt").text("$" + totalDebt.toFixed(0) + "M");
+  d3.select("#topDebtor").text(chartData[0] ? chartData[0].name : "-");
+  d3.select("#countryCount").text(chartData.length);
+
+  // Update legend
+  const legend = d3.select("#legend");
+  legend.selectAll(".legend-item").remove();
+  chartData.slice(0, 6).forEach(d => {
+    legend.append("div")
+      .attr("class", "legend-item")
+      .html(`<span class="legend-color" style="background:${d.color}"></span><span>${d.name} ($${d.debt.toFixed(0)}M)</span>`);
+  });
+}
+
+d3.select("#yearSlider").on("input", function() {
+  currentYear = +this.value;
+  d3.select("#yearDisplay").text(currentYear);
+  updateChart();
+});
+
+d3.selectAll(".filter-btn").on("click", function() {
+  d3.selectAll(".filter-btn").classed("active", false);
+  d3.select(this).classed("active", true);
+  currentRegion = this.dataset.region;
+  updateChart();
+});
+
+updateChart();
+</script>
+
+</body>
+</html>

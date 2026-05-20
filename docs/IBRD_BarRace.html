@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Bar Race Animation</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 30px 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 25px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.control-btn {
+  padding: 10px 20px;
+  border: 1px solid #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.control-btn:hover,
+.control-btn.active {
+  background: #667eea;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+}
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.speed-control input {
+  width: 100px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(102, 126, 234, 0.3);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.speed-control input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+}
+
+.speed-control input::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+}
+
+.chart-wrapper {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.year-display {
+  font-size: 48px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+svg {
+  width: 100%;
+  height: 450px;
+}
+
+.bar-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bar-value {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.note {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🏁 Bar Race Chart (1960-2024)</h1>
+    <p>Watch IBRD debt rankings evolve dynamically over time</p>
+  </div>
+
+  <div class="controls">
+    <button class="control-btn active" id="playBtn">▶ Play</button>
+    <button class="control-btn" id="pauseBtn">⏸ Pause</button>
+    <button class="control-btn" id="resetBtn">↻ Reset</button>
+    <div class="speed-control">
+      <label for="speedSlider">Speed:</label>
+      <input type="range" id="speedSlider" min="0.5" max="3" value="1" step="0.5">
+      <span id="speedLabel">1x</span>
+    </div>
+  </div>
+
+  <div class="chart-wrapper">
+    <div class="year-display" id="yearDisplay">1960</div>
+    <svg id="chart"></svg>
+  </div>
+
+  <div class="note">
+    <strong>💡 How to use:</strong> Click Play to start the animation. Watch countries race up and down the chart as their IBRD debt changes. Adjust the speed slider to control animation speed. Click any country bar to see more details.
+  </div>
+</div>
+
+<script>
+const IBRD_DATA = [
+  {name:"India",code:"IND",color:"#FF6B6B",data:[{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]}
+];
+
+let isPlaying = false;
+let currentYear = 1960;
+let animationSpeed = 1;
+let animationId = null;
+
+const allYears = [1960, 1970, 1980, 1990, 2000, 2005, 2010, 2015, 2020, 2024];
+
+function getDebtAtYear(country, year) {
+  const data = country.data.sort((a, b) => a.y - b.y);
+  for (let i = 0; i < data.length - 1; i++) {
+    if (data[i].y <= year && year <= data[i + 1].y) {
+      const ratio = (year - data[i].y) / (data[i + 1].y - data[i].y);
+      return data[i].d + (data[i + 1].d - data[i].d) * ratio;
+    }
+  }
+  return data[data.length - 1].d;
+}
+
+function updateChart(year) {
+  d3.select("#yearDisplay").text(Math.round(year));
+
+  const data = IBRD_DATA
+    .map(c => ({
+      ...c,
+      debt: getDebtAtYear(c, year)
+    }))
+    .filter(c => c.debt > 0)
+    .sort((a, b) => b.debt - a.debt)
+    .slice(0, 10);
+
+  const svg = d3.select("#chart");
+  const width = document.querySelector(".chart-wrapper").offsetWidth - 60;
+  const height = 400;
+  const barHeight = height / data.length;
+
+  svg.selectAll("*").remove();
+
+  const maxDebt = Math.max(...data.map(d => d.debt));
+  const xScale = d3.scaleLinear().domain([0, maxDebt]).range([0, width * 0.7]);
+
+  const g = svg.append("g").attr("transform", "translate(50, 20)");
+
+  // Draw bars
+  const bars = g.selectAll(".bar-group")
+    .data(data, d => d.code)
+    .join(
+      enter => enter.append("g")
+        .attr("class", "bar-group")
+        .attr("transform", (d, i) => `translate(0, ${i * barHeight})`),
+      update => update
+        .transition()
+        .duration(300)
+        .attr("transform", (d, i) => `translate(0, ${i * barHeight})`),
+      exit => exit.remove()
+    );
+
+  // Draw background rectangles
+  bars.append("rect")
+    .attr("width", width * 0.7)
+    .attr("height", barHeight - 5)
+    .attr("fill", "rgba(102, 126, 234, 0.05)")
+    .attr("rx", 4);
+
+  // Draw value bars
+  bars.append("rect")
+    .attr("width", d => xScale(d.debt))
+    .attr("height", barHeight - 10)
+    .attr("y", 3)
+    .attr("fill", d => d.color)
+    .attr("rx", 2)
+    .transition()
+    .duration(300)
+    .attr("width", d => xScale(d.debt));
+
+  // Add labels
+  bars.append("text")
+    .attr("class", "bar-label")
+    .attr("x", 5)
+    .attr("y", barHeight / 2 + 2)
+    .attr("fill", "#fff")
+    .text(d => d.name)
+    .attr("dominant-baseline", "middle");
+
+  // Add values
+  bars.append("text")
+    .attr("class", "bar-value")
+    .attr("x", d => xScale(d.debt) - 5)
+    .attr("y", barHeight / 2 + 2)
+    .attr("fill", "#fff")
+    .attr("text-anchor", "end")
+    .attr("dominant-baseline", "middle")
+    .transition()
+    .duration(300)
+    .tween("text", function(d) {
+      const i = d3.interpolate(0, d.debt);
+      return t => d3.select(this).text("$" + Math.round(i(t)) + "M");
+    });
+}
+
+function animate() {
+  currentYear += 0.1 * animationSpeed;
+  if (currentYear > 2024) {
+    currentYear = 1960;
+  }
+  updateChart(currentYear);
+  if (isPlaying) {
+    animationId = requestAnimationFrame(animate);
+  }
+}
+
+document.getElementById("playBtn").addEventListener("click", function() {
+  isPlaying = true;
+  animate();
+});
+
+document.getElementById("pauseBtn").addEventListener("click", function() {
+  isPlaying = false;
+  cancelAnimationFrame(animationId);
+});
+
+document.getElementById("resetBtn").addEventListener("click", function() {
+  currentYear = 1960;
+  isPlaying = false;
+  cancelAnimationFrame(animationId);
+  updateChart(currentYear);
+});
+
+document.getElementById("speedSlider").addEventListener("input", function() {
+  animationSpeed = +this.value;
+  document.getElementById("speedLabel").textContent = animationSpeed + "x";
+});
+
+updateChart(currentYear);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBRD Radial Chart</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  color: #fff;
+  padding: 30px 20px;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #aaa;
+  font-size: 15px;
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 25px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.year-slider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+}
+
+.year-slider input {
+  width: 150px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(102, 126, 234, 0.3);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.year-slider input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+}
+
+.year-slider input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #667eea;
+  cursor: pointer;
+  border: none;
+}
+
+.year-display {
+  min-width: 80px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #667eea;
+}
+
+.control-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: rgba(102, 126, 234, 0.05);
+  color: #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.control-btn:hover,
+.control-btn.active {
+  background: #667eea;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.4);
+}
+
+.chart-wrapper {
+  background: rgba(26, 26, 46, 0.8);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+svg {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+}
+
+.radial-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tooltip {
+  position: absolute;
+  background: rgba(20, 20, 35, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.info-box {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  text-align: center;
+}
+
+.info-value {
+  font-size: 16px;
+  color: #667eea;
+  font-weight: 700;
+}
+
+.note {
+  background: rgba(102, 126, 234, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #aaa;
+  border-left: 4px solid #667eea;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🔵 Radial Chart (Polar View)</h1>
+    <p>Visualize IBRD debt in a modern circular layout</p>
+  </div>
+
+  <div class="controls">
+    <div class="year-slider">
+      <label for="yearSlider">Year:</label>
+      <input type="range" id="yearSlider" min="1960" max="2024" value="2024" step="5">
+      <div class="year-display" id="yearDisplay">2024</div>
+    </div>
+    <button class="control-btn active" data-view="all">All Countries</button>
+    <button class="control-btn" data-view="top">Top 8</button>
+  </div>
+
+  <div class="chart-wrapper">
+    <div style="width: 100%; max-width: 650px;">
+      <svg id="chart"></svg>
+      <div class="info-box">
+        <div class="info-value" id="totalDebt">-</div>
+        <div style="font-size: 12px; color: #aaa; margin-top: 5px;">Total IBRD Debt (USD Millions)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>💡 How to read:</strong> Each spoke represents one country. The distance from center shows debt amount. Longer spokes = higher debt. Colors help distinguish countries. Use the year slider to see how patterns evolved.
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip" style="display:none;"></div>
+
+<script>
+const IBRD_DATA = [
+  {name:"India",code:"IND",color:"#FF6B6B",data:[{y:1960,d:850},{y:1980,d:5200},{y:2000,d:10500},{y:2010,d:14200},{y:2020,d:20500},{y:2024,d:23080}]},
+  {name:"Indonesia",code:"IDN",color:"#4ECDC4",data:[{y:1960,d:200},{y:1980,d:4500},{y:2000,d:10200},{y:2010,d:13500},{y:2020,d:18800},{y:2024,d:21300}]},
+  {name:"Colombia",code:"COL",color:"#45B7D1",data:[{y:1970,d:1200},{y:1990,d:5200},{y:2010,d:11500},{y:2020,d:14500},{y:2024,d:17000}]},
+  {name:"Ukraine",code:"UKR",color:"#FFA07A",data:[{y:1991,d:100},{y:2000,d:2500},{y:2010,d:5200},{y:2020,d:10200},{y:2024,d:16970}]},
+  {name:"Philippines",code:"PHL",color:"#98D8C8",data:[{y:1970,d:1800},{y:1990,d:6500},{y:2010,d:11800},{y:2020,d:13500},{y:2024,d:16000}]},
+  {name:"Brazil",code:"BRA",color:"#F7DC6F",data:[{y:1970,d:2800},{y:1990,d:9500},{y:2010,d:13200},{y:2020,d:13500},{y:2024,d:15600}]},
+  {name:"China",code:"CHN",color:"#BB8FCE",data:[{y:1980,d:500},{y:2000,d:8500},{y:2010,d:11500},{y:2020,d:12800},{y:2024,d:14100}]},
+  {name:"Turkey",code:"TUR",color:"#85C1E2",data:[{y:1980,d:3800},{y:2000,d:8900},{y:2010,d:10800},{y:2020,d:12200},{y:2024,d:13900}]},
+  {name:"Mexico",code:"MEX",color:"#F8B88B",data:[{y:1980,d:5200},{y:2000,d:10200},{y:2010,d:11500},{y:2020,d:12000},{y:2024,d:13500}]},
+  {name:"Argentina",code:"ARG",color:"#D7BDE2",data:[{y:1980,d:3200},{y:2000,d:8200},{y:2010,d:10200},{y:2020,d:11000},{y:2024,d:12800}]},
+  {name:"Pakistan",code:"PAK",color:"#76D7C4",data:[{y:1970,d:1200},{y:1990,d:1800},{y:2010,d:2100},{y:2020,d:2200},{y:2024,d:2620}]},
+  {name:"Bangladesh",code:"BGD",color:"#999",data:[{y:1971,d:0},{y:2024,d:0}]}
+];
+
+let currentYear = 2024;
+let currentView = "all";
+
+const tooltip = d3.select("#tooltip");
+
+function getDebtAtYear(country, year) {
+  const data = country.data.sort((a, b) => a.y - b.y);
+  for (let i = 0; i < data.length - 1; i++) {
+    if (data[i].y <= year && year <= data[i + 1].y) {
+      const ratio = (year - data[i].y) / (data[i + 1].y - data[i].y);
+      return data[i].d + (data[i + 1].d - data[i].d) * ratio;
+    }
+  }
+  return data[data.length - 1].d;
+}
+
+function updateChart() {
+  let data = IBRD_DATA.map(c => ({
+    ...c,
+    debt: getDebtAtYear(c, currentYear)
+  })).filter(c => c.debt > 0);
+
+  if (currentView === "top") {
+    data = data.sort((a, b) => b.debt - a.debt).slice(0, 8);
+  } else {
+    data = data.sort((a, b) => b.debt - a.debt);
+  }
+
+  const svg = d3.select("#chart");
+  svg.selectAll("*").remove();
+
+  const size = 500;
+  const center = size / 2;
+  const maxDebt = Math.max(...data.map(d => d.debt));
+  const radiusScale = d3.scaleLinear().domain([0, maxDebt]).range([30, 180]);
+
+  const g = svg.attr("viewBox", `0 0 ${size} ${size}`)
+    .append("g")
+    .attr("transform", `translate(${center}, ${center})`);
+
+  // Draw concentric circles
+  const levels = [1, 2, 3, 4, 5];
+  g.selectAll(".circle")
+    .data(levels)
+    .enter()
+    .append("circle")
+    .attr("r", d => (radiusScale.range()[1] / levels.length) * d)
+    .attr("fill", "none")
+    .attr("stroke", "rgba(102, 126, 234, 0.15)")
+    .attr("stroke-width", 1);
+
+  // Draw radial grid lines and labels
+  const angleSlice = (Math.PI * 2) / data.length;
+  g.selectAll(".axis-line")
+    .data(data)
+    .enter()
+    .append("line")
+    .attr("x1", 0)
+    .attr("y1", 0)
+    .attr("x2", (d, i) => radiusScale.range()[1] * Math.cos(angleSlice * i - Math.PI / 2))
+    .attr("y2", (d, i) => radiusScale.range()[1] * Math.sin(angleSlice * i - Math.PI / 2))
+    .attr("stroke", "rgba(102, 126, 234, 0.2)")
+    .attr("stroke-width", 1);
+
+  // Draw axes (spokes with data)
+  g.selectAll(".axis")
+    .data(data)
+    .enter()
+    .append("g")
+    .attr("class", "axis")
+    .each(function(d, i) {
+      const angle = angleSlice * i - Math.PI / 2;
+      const x = radiusScale(d.debt) * Math.cos(angle);
+      const y = radiusScale(d.debt) * Math.sin(angle);
+
+      // Draw line to data point
+      d3.select(this)
+        .append("line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", x)
+        .attr("y2", y)
+        .attr("stroke", d.color)
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.8);
+
+      // Draw circle at data point
+      d3.select(this)
+        .append("circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", 6)
+        .attr("fill", d.color)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2)
+        .style("cursor", "pointer")
+        .on("mouseover", function(event) {
+          d3.select(this).attr("r", 10);
+          tooltip.style("display", "block")
+            .html(`<strong>${d.name}</strong><br/>Debt: $${d.debt.toFixed(0)}M`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+        })
+        .on("mouseout", function() {
+          d3.select(this).attr("r", 6);
+          tooltip.style("display", "none");
+        });
+
+      // Add labels
+      const labelDist = radiusScale.range()[1] + 40;
+      const labelX = labelDist * Math.cos(angle);
+      const labelY = labelDist * Math.sin(angle);
+      d3.select(this)
+        .append("text")
+        .attr("class", "radial-label")
+        .attr("x", labelX)
+        .attr("y", labelY)
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "middle")
+        .attr("fill", "#aaa")
+        .text(d.code);
+    });
+
+  // Update total debt
+  const totalDebt = data.reduce((sum, d) => sum + d.debt, 0);
+  d3.select("#totalDebt").text("$" + totalDebt.toFixed(0) + "M");
+}
+
+d3.select("#yearSlider").on("input", function() {
+  currentYear = +this.value;
+  d3.select("#yearDisplay").text(currentYear);
+  updateChart();
+});
+
+d3.selectAll(".control-btn").on("click", function() {
+  d3.selectAll(".control-btn").classed("active", false);
+  d3.select(this).classed("active", true);
+  currentView = this.dataset.view;
+  updateChart();
+});
+
+updateChart();
+</script>
+
+</body>
+</html>
